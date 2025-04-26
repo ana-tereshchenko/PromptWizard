@@ -20,23 +20,24 @@ def call_api(messages):
     from azure.identity import get_bearer_token_provider, AzureCliCredential
     from openai import AzureOpenAI
 
-    if os.environ['USE_OPENAI_API_KEY'] == "True":
+    if os.environ["USE_OPENAI_API_KEY"] == "True":
         client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
 
         response = client.chat.completions.create(
-        model=os.environ["OPENAI_MODEL_NAME"],
-        messages=messages,
-        temperature=0.0,
+            model=os.environ["OPENAI_MODEL_NAME"],
+            messages=messages,
+            temperature=0.0,
         )
     else:
-        token_provider = get_bearer_token_provider(
-                AzureCliCredential(), "https://cognitiveservices.azure.com/.default"
-            )
+        # token_provider = get_bearer_token_provider(
+        #        AzureCliCredential(), "https://cognitiveservices.azure.com/.default"
+        #    )
         client = AzureOpenAI(
             api_version=os.environ["OPENAI_API_VERSION"],
-            azure_endpoint=os.environ["AZURE_OPENAI_ENDPOINT"],
-            azure_ad_token_provider=token_provider
-            )
+            # azure_ad_token_provider=token_provider,
+            api_key=os.getenv("OPENAI_API_KEY", ""),
+            azure_endpoint=os.getenv("OPENAI_API_ENDPOINT", ""),
+        )
         response = client.chat.completions.create(
             model=os.environ["AZURE_OPENAI_DEPLOYMENT_NAME"],
             messages=messages,
@@ -60,7 +61,7 @@ class LLMMgr:
                 return 0
         except Exception as e:
             print(e)
-            return "Sorry, I am not able to understand your query. Please try again."
+            return "The following Exception occured when calling the LLM API: {e}."
             # raise GlueLLMException(f"Exception when calling {llm_handle.__class__.__name__} "
             #                        f"LLM in chat mode, with message {messages} ", e)
         
